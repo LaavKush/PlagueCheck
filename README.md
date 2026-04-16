@@ -18,11 +18,19 @@
 
 ---
 
-A B.Tech 3rd Year ADSA project that detects plagiarism by:
+An ADSA project that detects plagiarism by:
 1. Extracting key phrases from your document
 2. Searching the web via DuckDuckGo (no API key needed)
 3. Fetching and parsing top result pages
 4. Running 4 string-matching algorithms against each source
+
+---
+
+## Demo
+
+<p align="center">
+  <img src="images/demo.png" alt="PlagueCheck Demo" width="90%" />
+</p>
 
 ---
 
@@ -56,28 +64,9 @@ python app.py
 
 ## How It Works (Flow)
 
-```
-User Input (text)
-      │
-      ▼
-Extract Key Phrases (3 sentences)
-      │
-      ▼
-DuckDuckGo Search (per phrase)
-      │
-      ▼
-Fetch Top Web Pages (BeautifulSoup)
-      │
-      ▼
-Run Algorithms against each page:
-  ├─ KMP          → exact sentence match
-  ├─ Rabin-Karp   → n-gram hash match
-  ├─ Winnowing    → Jaccard shingle similarity
-  └─ Z-Algorithm  → longest common segments
-      │
-      ▼
-Weighted Combined Score → Verdict
-```
+<p align="center">
+  <img src="images/workflow.png" alt="Workflow Diagram" width="90%" />
+</p>
 
 ---
 
