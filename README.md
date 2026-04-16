@@ -98,17 +98,23 @@ Weighted Combined Score → Verdict
 - Polite 0.5–1.2s delay between requests to avoid rate limiting
 - All algorithms written from scratch — no string library shortcuts
 
-👩‍💻 Author
+## Author
 
-Laavanya Kushwaha
-Web Development | AI | Machine Learning
+**Laavanya Kushwaha**  
+Web Development | AI | Machine Learning  
 
-⭐ Support
+---
+
+## ⭐ Support
 
 If you like this project:
 
-⭐ Star the repo
-🍴 Fork it
-📢 Share it
+- Star the repo  
+- Fork it  
+- Share it  
 
-<p align="center"> <img src="https://capsule-render.vercel.app/api?type=waving&color=0:1e1e2e,50:111118,100:0a0a0f&height=120&section=footer"/> </p> ```
+---
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:1e1e2e,50:111118,100:0a0a0f&height=120&section=footer"/>
+</p>
