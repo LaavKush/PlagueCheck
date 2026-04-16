@@ -1,4 +1,22 @@
-# PlagueCheck — ADSA Plagiarism Detection Engine
+# 🔍 PlagueCheck — ADSA Plagiarism Detection Engine
+### Detect Similarity. Uncover Hidden Matches. Think Like an Algorithm.
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0a0a0f,50:111118,100:1e1e2e&height=200&section=header&text=PlagueCheck&fontSize=40&fontColor=e8ff47&animation=fadeIn" />
+</p>
+
+<p align="center">
+  <b>Multi-Algorithm Plagiarism Detection Engine powered by ADSA concepts</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Algorithms-KMP%20%7C%20RabinKarp%20%7C%20Winnowing-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Backend-Flask-green?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Web-DuckDuckGo-yellow?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Frontend-HTML%2FCSS%2FJS-orange?style=for-the-badge" />
+</p>
+
+---
 
 A B.Tech 3rd Year ADSA project that detects plagiarism by:
 1. Extracting key phrases from your document
@@ -18,22 +36,6 @@ A B.Tech 3rd Year ADSA project that detects plagiarism by:
 | **Z-Algorithm** | Longest common segment detection | O(n) |
 
 Combined weighted score = 35% KMP + 30% RK + 20% Winnowing + 15% Z-Algo
-
----
-
-## Project Structure
-
-```
-plagiarism-detector/
-├── backend/
-│   ├── algorithms.py   ← All 4 ADSA algorithms (pure Python, no shortcuts)
-│   ├── searcher.py     ← DuckDuckGo scraper + web page fetcher
-│   └── app.py          ← Flask REST API
-├── frontend/
-│   └── index.html      ← Beautiful single-page UI
-├── requirements.txt
-└── README.md
-```
 
 ---
 
@@ -94,5 +96,19 @@ Weighted Combined Score → Verdict
 
 - DuckDuckGo is scraped via HTML endpoint (no API key required)
 - Polite 0.5–1.2s delay between requests to avoid rate limiting
-- Max 4 sources fetched per check (adjustable in `searcher.py`)
 - All algorithms written from scratch — no string library shortcuts
+
+👩‍💻 Author
+
+Laavanya Kushwaha
+Web Development | AI | Machine Learning
+
+⭐ Support
+
+If you like this project:
+
+⭐ Star the repo
+🍴 Fork it
+📢 Share it
+
+<p align="center"> <img src="https://capsule-render.vercel.app/api?type=waving&color=0:1e1e2e,50:111118,100:0a0a0f&height=120&section=footer"/> </p> ```
