@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PlagueCheck — ADSA Plagiarism Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #e8ff47;
+    --accent2: #ff6b47;
+    --accent3: #47c8ff;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --clean: #47ff8f;
+    --low: #47c8ff;
+    --moderate: #ffb347;
+    --high: #ff4747;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,255,71,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,255,71,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 40px 0 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .logo-mark {
+    width: 48px;
+    height: 48px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: #0a0a0f;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .logo-mark::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 2px solid #0a0a0f;
+  }
+
+  .header-text h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .header-text p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .algo-pills {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .pill {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* INPUT AREA */
+  .input-section {
+    margin-bottom: 32px;
+  }
+
+  .input-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .input-label::before {
+    content: '//';
+    color: var(--accent);
+  }
+
+  textarea {
+    width: 100%;
+    height: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 20px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.7;
+    transition: border-color 0.2s;
+  }
+  textarea:focus {
+    border-color: var(--accent);
+  }
+  textarea::placeholder {
+    color: var(--muted);
+  }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  #charCount {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* BUTTON */
+  .btn-check {
+    background: var(--accent);
+    color: #0a0a0f;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 14px 36px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: relative;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-check:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(232,255,71,0.2);
+  }
+  .btn-check:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-check .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #0a0a0f;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+  }
+  .btn-check.loading .spinner { display: block; }
+  .btn-check.loading .btn-text::after {
+    content: '...';
+    animation: dots 1.5s infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+  }
+
+  /* STATUS BAR */
+  #statusBar {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+  /* VERDICT */
+  #verdictSection {
+    display: none;
+    margin-bottom: 40px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .verdict-card {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+  }
+  .verdict-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+  }
+  .verdict-card.clean::before { background: var(--clean); }
+  .verdict-card.low::before { background: var(--low); }
+  .verdict-card.moderate::before { background: var(--moderate); }
+  .verdict-card.high::before { background: var(--high); }
+
+  .score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid;
+    position: relative;
+  }
+  .score-circle.clean { border-color: var(--clean); }
+  .score-circle.low { border-color: var(--low); }
+  .score-circle.moderate { border-color: var(--moderate); }
+  .score-circle.high { border-color: var(--high); }
+
+  .score-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    line-height: 1;
+  }
+  .score-circle.clean .score-num { color: var(--clean); }
+  .score-circle.low .score-num { color: var(--low); }
+  .score-circle.moderate .score-num { color: var(--moderate); }
+  .score-circle.high .score-num { color: var(--high); }
+
+  .score-pct { font-size: 10px; color: var(--muted); }
+
+  .verdict-info h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .verdict-info p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .verdict-meta {
+    margin-left: auto;
+    text-align: right;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .verdict-meta span {
+    display: block;
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* RESULTS */
+  #resultsSection { display: none; animation: fadeIn 0.5s ease; }
+
+  .section-header {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-header::before { content: '//'; color: var(--accent); }
+
+  .source-card {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .source-card:hover { border-color: #2e2e4e; }
+
+  .source-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .source-card.open .source-header { border-bottom-color: var(--border); }
+
+  .source-score-badge {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 4px 10px;
+    border: 1px solid;
+    min-width: 52px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .source-info { flex: 1; min-width: 0; }
+  .source-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .source-url {
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .expand-icon {
+    color: var(--muted);
+    font-size: 12px;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+  .source-card.open .expand-icon { transform: rotate(180deg); }
+
+  .source-body {
+    display: none;
+    padding: 20px;
+  }
+  .source-card.open .source-body { display: block; }
+
+  /* Algorithm breakdown */
+  .algo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .algo-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 14px;
+  }
+
+  .algo-name {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .algo-score-bar {
+    height: 4px;
+    background: var(--border);
+    margin-bottom: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .algo-score-fill {
+    height: 100%;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    width: 0%;
+  }
+
+  .algo-score-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  /* Matched content */
+  .match-section {
+    margin-top: 16px;
+  }
+  .match-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .match-item {
+    background: var(--bg);
+    border-left: 2px solid var(--accent2);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #c0c0d0;
+    margin-bottom: 6px;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--accent3);
+    text-decoration: none;
+    margin-top: 12px;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .source-link:hover { border-bottom-color: var(--accent3); }
+
+  /* Error */
+  .error-box {
+    border: 1px solid var(--high);
+    padding: 16px 20px;
+    background: rgba(255,71,71,0.05);
+    font-size: 13px;
+    color: #ff8080;
+    margin-bottom: 24px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 0 40px;
+    margin-top: 60px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .footer-algo {
+    display: flex;
+    gap: 12px;
+  }
+  .footer-algo span { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .algo-grid { grid-template-columns: 1fr; }
+    header { flex-wrap: wrap; }
+    .algo-pills { display: none; }
+    .verdict-meta { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- <div class="container">
+  <header>
+    <div class="logo-mark">P</div>
+    <div class="header-text">
+      <h1>PlagueCheck</h1>
+      <p>ADSA Plagiarism Detection Engine </p>
+    </div>
+    <div class="algo-pills">
+      <div class="pill">KMP</div>
+      <div class="pill">Rabin-Karp</div>
+      <div class="pill">Winnowing</div>
+      <div class="pill">Z-Algorithm</div>
+      <div class="pill">DuckDuckGo</div>
+    </div>
+  </header>
+
+  <!-- INPUT -->
+  <div class="input-section">
+    <div class="input-label">Paste your document below</div>
+    <textarea id="docInput" placeholder="Paste the text you want to check for plagiarism here. The engine will search the web via DuckDuckGo, fetch source pages, and run KMP, Rabin-Karp, Winnowing, and Z-Algorithm against each source..."></textarea>
+    <div class="input-footer">
+      <span id="charCount">0 characters</span>
+      <button class="btn-check" id="checkBtn" onclick="runCheck()">
+        <div class="spinner"></div>
+        <span class="btn-text">Run Analysis</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div id="statusBar">⟳ Searching DuckDuckGo and fetching sources...</div>
+
+  <!-- ERROR -->
+  <div id="errorBox" class="error-box" style="display:none"></div>
+
+  <!-- VERDICT -->
+  <div id="verdictSection">
+    <div class="section-header">Overall Verdict</div>
+    <div class="verdict-card" id="verdictCard">
+      <div class="score-circle" id="scoreCircle">
+        <span class="score-num" id="scoreNum">0</span>
+        <span class="score-pct">%</span>
+      </div>
+      <div class="verdict-info">
+        <h2 id="verdictTitle">—</h2>
+        <p id="verdictDesc">—</p>
+      </div>
+      <div class="verdict-meta">
+        <span id="sourceCount">—</span>
+        sources scanned
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="resultsSection">
+    <div class="section-header">Source Analysis</div>
+    <div id="sourceCards"></div>
+  </div>
+
+  <footer>
+    <span>Algorithms:</span>
+    <div class="footer-algo">
+      <span>KMP</span> · <span>Rabin-Karp</span> · <span>Winnowing</span> · <span>Z-Algo</span>
+    </div>
+    <span style="margin-left:auto">Web source: DuckDuckGo HTML</span>
+  </footer>
+</div> -->
+
+<script>
+const API = 'http://localhost:5000/api';
+
+document.getElementById('docInput').addEventListener('input', function() {
+  document.getElementById('charCount').textContent = this.value.length + ' characters';
+});
+
+function getScoreColor(score) {
+  if (score >= 60) return 'var(--high)';
+  if (score >= 30) return 'var(--moderate)';
+  if (score >= 10) return 'var(--low)';
+  return 'var(--clean)';
+}
+
+function getVerdictClass(verdict) {
+  return verdict; // clean, low, moderate, high
+}
+
+const VERDICTS = {
+  clean: {
+    title: 'No Plagiarism Detected',
+    desc: 'All algorithms returned low similarity scores against web sources. Content appears to be original.'
+  },
+  low: {
+    title: 'Low Similarity',
+    desc: 'Minor overlap detected with some web sources. Could be common phrases or coincidental matches.'
+  },
+  moderate: {
+    title: 'Moderate Similarity',
+    desc: 'Significant content overlap detected. Review the matched sources below for details.'
+  },
+  high: {
+    title: 'High Plagiarism Risk',
+    desc: 'Strong similarity detected with web sources. Content may be copied or closely paraphrased.'
+  }
+};
+
+async function runCheck() {
+  const doc = document.getElementById('docInput').value.trim();
+  if (doc.length < 50) {
+    showError('Please enter at least 50 characters of text.');
+    return;
+  }
+
+  const btn = document.getElementById('checkBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  document.getElementById('statusBar').style.display = 'block';
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('verdictSection').style.display = 'none';
+  document.getElementById('resultsSection').style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ document: doc })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Server error');
+    }
+
+    const data = await res.json();
+    renderResults(data);
+
+  } catch (e) {
+    showError('Error: ' + e.message + '. Make sure the Flask server is running on port 5000.');
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    document.getElementById('statusBar').style.display = 'none';
+  }
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+function renderResults(data) {
+  // Verdict
+  const v = data.overall_verdict;
+  const info = VERDICTS[v] || VERDICTS.clean;
+  const score = data.max_score;
+
+  document.getElementById('verdictSection').style.display = 'block';
+  const card = document.getElementById('verdictCard');
+  card.className = 'verdict-card ' + v;
+
+  const circle = document.getElementById('scoreCircle');
+  circle.className = 'score-circle ' + v;
+
+  const scoreNum = document.getElementById('scoreNum');
+  scoreNum.className = 'score-num';
+  scoreNum.style.color = getScoreColor(score);
+
+  // Animate score
+  let current = 0;
+  const target = score;
+  const step = target / 40;
+  const interval = setInterval(() => {
+    current = Math.min(current + step, target);
+    scoreNum.textContent = Math.round(current);
+    if (current >= target) clearInterval(interval);
+  }, 20);
+
+  document.getElementById('verdictTitle').textContent = info.title;
+  document.getElementById('verdictDesc').textContent = info.desc;
+  document.getElementById('sourceCount').textContent = data.sources_checked;
+
+  // Source cards
+  if (data.results.length === 0) {
+    document.getElementById('resultsSection').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('resultsSection').style.display = 'block';
+  const container = document.getElementById('sourceCards');
+  container.innerHTML = '';
+
+  // Sort by combined score descending
+  const sorted = [...data.results].sort(
+    (a, b) => b.analysis.combined_score - a.analysis.combined_score
+  );
+
+  sorted.forEach((result, idx) => {
+    const cs = result.analysis.combined_score;
+    const color = getScoreColor(cs);
+    const src = result.source;
+    const analysis = result.analysis;
+
+    const algos = [
+      { name: 'KMP — Exact Match', score: analysis.kmp.score },
+      { name: 'Rabin-Karp — N-gram', score: analysis.rabin_karp.score },
+      { name: 'Winnowing — Jaccard', score: analysis.winnowing.score },
+      { name: 'Z-Algorithm', score: analysis.z_algorithm.score }
+    ];
+
+    // Collect matched content
+    const matchedSentences = analysis.kmp.matched_sentences || [];
+    const matchedNgrams = analysis.rabin_karp.matched_ngrams || [];
+    const longMatches = analysis.z_algorithm.long_matches || [];
+
+    const card = document.createElement('div');
+    card.className = 'source-card';
+    card.innerHTML = `
+      <div class="source-header" onclick="toggleCard(this)">
+        <div class="source-score-badge" style="color:${color}; border-color:${color}">
+          ${cs.toFixed(0)}%
+        </div>
+        <div class="source-info">
+          <div class="source-title">${escHtml(src.title || 'Unknown Source')}</div>
+          <div class="source-url">${escHtml(src.url)}</div>
+        </div>
+        <div class="expand-icon">▼</div>
+      </div>
+      <div class="source-body">
+        <div class="algo-grid">
+          ${algos.map(a => `
+            <div class="algo-item">
+              <div class="algo-name">${a.name}</div>
+              <div class="algo-score-bar">
+                <div class="algo-score-fill" style="background:${getScoreColor(a.score)}" data-target="${a.score}"></div>
+              </div>
+              <div class="algo-score-val" style="color:${getScoreColor(a.score)}">${a.score.toFixed(1)}%</div>
+            </div>
+          `).join('')}
+        </div>
+
+        ${matchedSentences.length > 0 ? `
+          <div class="match-section">
+            <div class="match-label">KMP — Exact Matched Sentences (${matchedSentences.length})</div>
+            ${matchedSentences.slice(0,3).map(s => `<div class="match-item">${escHtml(s)}</div>`).join('')}
+          </div>
+        ` : ''}
+
+        ${matchedNgrams.length > 0 ? `
+          <div class="match-section">
+            <div class="match-label">Rabin-Karp — Matched N-grams (${matchedNgrams.length})</div>
+            ${matchedNgrams.slice(0,4).map(ng => `<div class="match-item">${escHtml(ng)}</div>`).join('')}
+          </div>
+        ` : ''}
+
+        ${longMatches.length > 0 ? `
+          <div class="match-section">
+            <div class="match-label">Z-Algorithm — Common Segments</div>
+            ${longMatches.slice(0,3).map(m => `<div class="match-item">${escHtml(m.substring(0,120))}${m.length > 120 ? '…' : ''}</div>`).join('')}
+          </div>
+        ` : ''}
+
+        <a href="${escHtml(src.url)}" target="_blank" class="source-link">
+          ↗ View Source Page
+        </a>
+      </div>
+    `;
+
+    container.appendChild(card);
+
+    // Animate bars after render
+    setTimeout(() => {
+      card.querySelectorAll('.algo-score-fill').forEach(bar => {
+        bar.style.width = bar.dataset.target + '%';
+      });
+    }, 100 + idx * 80);
+  });
+}
+
+function toggleCard(header) {
+  const card = header.closest('.source-card');
+  card.classList.toggle('open');
+  if (card.classList.contains('open')) {
+    card.querySelectorAll('.algo-score-fill').forEach(bar => {
+      bar.style.width = bar.dataset.target + '%';
+    });
+  }
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Allow Ctrl+Enter to submit
+document.getElementById('docInput').addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') runCheck();
+});
+</script>
+</body>
+</html>
